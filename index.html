@@ -218,10 +218,12 @@ document.getElementById("checkOutButton").disabled =
         setStatus("กำลังลงทะเบียน...");
 
         const result = await callApi({
-          action: "register",
-          idToken: idToken,
-          studentId: studentId
-        });
+2
+action: "getProfile",
+3
+idToken: idToken
+4
+});
 
         if (!result.ok) {
           throw new Error(result.message);
