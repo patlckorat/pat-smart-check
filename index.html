@@ -22,12 +22,12 @@
     .hidden { display:none; }
     label { display:block; margin-top:16px; font-weight:bold; }
     input { box-sizing:border-box; width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; font-size:16px; }
-    button { width:100%; margin-top:12px; padding:13px; border:0; border-radius:8px; color:#fff; font-size:16px; font-weight:bold; cursor:pointer; }
+    button { width:100%; margin-top:12px; padding:13px; border:0; border-radius:8px; color:#fff; font-size:16px; font-weight:bold; }
     .green { background:#06c755; }
     .red { background:#dc2626; }
     .blue { background:#2563eb; }
     .gray { background:#64748b; }
-    button:disabled { background:#94a3b8; cursor:not-allowed; }
+    button:disabled { background:#94a3b8; }
     #reader { margin-top:16px; overflow:hidden; border-radius:10px; }
     #photoPreview { width:100%; margin-top:12px; border-radius:10px; }
     .preview { margin-top:16px; padding:14px; border:2px solid #06c755; border-radius:10px; }
@@ -68,11 +68,6 @@
       <div id="captureTitle" class="info"></div>
 
       <div id="reader"></div>
-
-      <!-- ปุ่มเปิดกล้อง Selfie เพิ่มเติมเพื่อเลี่ยง Security Block บน Mobile Browser -->
-      <button id="takePhotoBtn" class="green hidden" onclick="triggerCamera()">
-        📸 ถ่ายรูป Selfie ยืนยันตัวตน
-      </button>
 
       <input
         id="photoInput"
@@ -238,7 +233,6 @@
       document.getElementById("captureSection").classList.remove("hidden");
       document.getElementById("confirmSection").classList.add("hidden");
       document.getElementById("photoPreview").classList.add("hidden");
-      document.getElementById("takePhotoBtn").classList.add("hidden");
       document.getElementById("cancelScanButton").classList.remove("hidden");
 
       document.getElementById("captureTitle").textContent =
@@ -266,24 +260,16 @@
       qrText = decodedText;
 
       if (html5QrCode) {
-        try {
-          await html5QrCode.stop();
-          html5QrCode.clear();
-        } catch (e) {
-          console.error("Clear QR scanner error:", e);
-        }
+        await html5QrCode.stop();
+        html5QrCode.clear();
         html5QrCode = null;
       }
 
       document.getElementById("reader").innerHTML = "";
       document.getElementById("captureTitle").textContent =
-        "ขั้นที่ 2: กดปุ่มด้านล่างเพื่อถ่ายรูป Selfie";
+        "ขั้นที่ 2: ถ่ายรูป Selfie เพื่อยืนยันตัวตน";
 
-      setStatus("สแกน QR สำเร็จ กรุณากดปุ่มเพื่อถ่ายรูป", "success");
-      document.getElementById("takePhotoBtn").classList.remove("hidden");
-    }
-
-    function triggerCamera() {
+      setStatus("สแกน QR สำเร็จ กรุณาถ่ายรูป Selfie", "success");
       document.getElementById("photoInput").click();
     }
 
@@ -315,7 +301,6 @@
           " เมตร</strong>";
 
         document.getElementById("confirmSection").classList.remove("hidden");
-        document.getElementById("takePhotoBtn").classList.add("hidden");
         document.getElementById("cancelScanButton").classList.add("hidden");
 
         setStatus("ตรวจสอบข้อมูลและกดยืนยันบันทึก", "success");
@@ -426,7 +411,6 @@
 
       document.getElementById("reader").innerHTML = "";
       document.getElementById("photoInput").value = "";
-      document.getElementById("takePhotoBtn").classList.add("hidden");
       document.getElementById("captureSection").classList.add("hidden");
       document.getElementById("attendanceSection").classList.remove("hidden");
     }
