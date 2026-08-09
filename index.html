@@ -257,21 +257,39 @@
     }
 
     async function onQrSuccess(decodedText) {
-      qrText = decodedText;
 
-      if (html5QrCode) {
-        await html5QrCode.stop();
-        html5QrCode.clear();
-        html5QrCode = null;
-      }
+  qrText = decodedText;
 
-      document.getElementById("reader").innerHTML = "";
-      document.getElementById("captureTitle").textContent =
-        "ขั้นที่ 2: ถ่ายรูป Selfie เพื่อยืนยันตัวตน";
+  if (html5QrCode) {
+    try {
+      await html5QrCode.stop();
+      await html5QrCode.clear();
+    } catch (e) {}
 
-      setStatus("สแกน QR สำเร็จ กรุณาถ่ายรูป Selfie", "success");
-      document.getElementById("photoInput").click();
-    }
+    html5QrCode = null;
+  }
+
+  document.getElementById("reader").innerHTML = "";
+
+  document.getElementById("captureTitle").textContent =
+    "ขั้นที่ 2: ถ่ายรูป Selfie เพื่อยืนยันตัวตน";
+
+  setStatus(
+    "สแกน QR สำเร็จ กรุณาแตะหน้าจอเพื่อเปิดกล้อง",
+    "success"
+  );
+
+  setTimeout(() => {
+    const input = document.getElementById("photoInput");
+
+    input.classList.remove("hidden");
+
+    input.style.display = "block";
+
+    input.style.marginTop = "15px";
+  }, 500);
+
+}
 
     document.getElementById("photoInput").addEventListener("change", async function(event) {
       const file = event.target.files[0];
