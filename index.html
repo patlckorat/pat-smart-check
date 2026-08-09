@@ -20,29 +20,38 @@
       max-width: 520px;
       margin: 0 auto;
       padding: 24px;
-      background: #ffffff;
+      background: white;
       border-radius: 16px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, .10);
     }
 
+    h2, .subtitle {
+      text-align: center;
+    }
+
     h2 {
       margin: 0 0 8px;
-      text-align: center;
     }
 
     .subtitle {
       margin: 0 0 20px;
       color: #64748b;
-      text-align: center;
     }
 
-    #status {
+    #status, .profile {
       margin-bottom: 18px;
       padding: 12px;
       border-radius: 8px;
+    }
+
+    #status {
       background: #fff7ed;
       color: #9a3412;
       font-weight: bold;
+    }
+
+    .profile {
+      background: #f1f5f9;
     }
 
     .success {
@@ -53,13 +62,6 @@
     .error {
       background: #fee2e2 !important;
       color: #b91c1c !important;
-    }
-
-    .profile {
-      margin-bottom: 20px;
-      padding: 12px;
-      border-radius: 8px;
-      background: #f1f5f9;
     }
 
     label {
@@ -92,13 +94,6 @@
     button:disabled {
       background: #94a3b8;
     }
-
-    .note {
-      margin-top: 14px;
-      color: #64748b;
-      font-size: 13px;
-      line-height: 1.5;
-    }
   </style>
 </head>
 
@@ -114,15 +109,13 @@
     </div>
 
     <form id="registerForm">
-      <label for="nationalId">เลขบัตรประชาชน 13 หลัก</label>
+      <label for="studentId">รหัสนักเรียน</label>
 
       <input
-        id="nationalId"
+        id="studentId"
         type="text"
-        inputmode="numeric"
-        maxlength="13"
         autocomplete="off"
-        placeholder="กรอกเลขบัตรประชาชน"
+        placeholder="กรอกรหัสนักเรียน"
         required
       >
 
@@ -130,10 +123,6 @@
         ลงทะเบียน
       </button>
     </form>
-
-    <div class="note">
-      ระบบตรวจสอบตัวตนจาก LINE ก่อนบันทึก และไม่เก็บเลขบัตรประชาชนแบบเต็มในชีต
-    </div>
   </div>
 
   <script>
@@ -163,18 +152,16 @@
         idToken = liff.getIDToken();
 
         if (!idToken) {
-          throw new Error("ไม่พบ ID Token กรุณาตรวจสอบ scope openid ใน LINE Developers");
+          throw new Error("ไม่พบ ID Token");
         }
 
         document.getElementById("displayName").textContent =
           profile.displayName || "ผู้ใช้ LINE";
 
         document.getElementById("submitButton").disabled = false;
-
         setStatus("เชื่อมต่อ LINE สำเร็จ", "success");
 
       } catch (error) {
-        console.error(error);
         setStatus(
           "เกิดข้อผิดพลาด: " + (error.message || String(error)),
           "error"
@@ -182,18 +169,14 @@
       }
     }
 
-    document.getElementById("nationalId").addEventListener("input", function () {
-      this.value = this.value.replace(/\D/g, "");
-    });
-
     document.getElementById("registerForm").addEventListener("submit", async function (event) {
       event.preventDefault();
 
-      const nationalId = document.getElementById("nationalId").value;
+      const studentId = document.getElementById("studentId").value.trim();
       const button = document.getElementById("submitButton");
 
-      if (nationalId.length !== 13) {
-        setStatus("กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก", "error");
+      if (!studentId) {
+        setStatus("กรุณากรอกรหัสนักเรียน", "error");
         return;
       }
 
@@ -208,7 +191,7 @@
           },
           body: JSON.stringify({
             idToken: idToken,
-            nationalId: nationalId
+            studentId: studentId
           })
         });
 
@@ -219,12 +202,10 @@
         }
 
         setStatus(result.message, "success");
-        document.getElementById("nationalId").disabled = true;
+        document.getElementById("studentId").disabled = true;
 
       } catch (error) {
-        console.error(error);
         button.disabled = false;
-
         setStatus(
           "ลงทะเบียนไม่สำเร็จ: " + (error.message || String(error)),
           "error"
