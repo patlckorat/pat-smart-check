@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PAT Smart Check - LIFF Test</title>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f5f7fa;
+      font-family: Arial, sans-serif;
+      color: #1f2937;
+    }
+
+    .box {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 24px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .10);
+    }
+
+    h2 {
+      margin: 0 0 20px;
+      text-align: center;
+    }
+
+    #status, .value {
+      padding: 12px;
+      border-radius: 8px;
+      word-break: break-all;
+    }
+
+    #status {
+      background: #fff7ed;
+      color: #9a3412;
+      font-weight: bold;
+    }
+
+    .item {
+      margin-top: 18px;
+    }
+
+    .label {
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    .value {
+      background: #f1f5f9;
+    }
+
+    .success {
+      background: #dcfce7 !important;
+      color: #166534 !important;
+    }
+
+    .error {
+      background: #fee2e2 !important;
+      color: #b91c1c !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <h2>PAT Smart Check</h2>
+
+    <div id="status">กำลังเชื่อมต่อ LINE...</div>
+
+    <div class="item">
+      <div class="label">ชื่อ LINE</div>
+      <div class="value" id="displayName">-</div>
+    </div>
+
+    <div class="item">
+      <div class="label">LINE User ID</div>
+      <div class="value" id="userId">-</div>
+    </div>
+  </div>
+
+  <script>
+    const LIFF_ID = "2011040773-ptaokyCy";
+
+    async function startLiff() {
+      const status = document.getElementById("status");
+
+      try {
+        await liff.init({ liffId: LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+          liff.login({ redirectUri: window.location.href });
+          return;
+        }
+
+        const profile = await liff.getProfile();
+
+        document.getElementById("displayName").textContent =
+          profile.displayName || "-";
+
+        document.getElementById("userId").textContent =
+          profile.userId || "-";
+
+        status.className = "success";
+        status.textContent = "เชื่อมต่อ LINE สำเร็จ";
+
+      } catch (error) {
+        console.error(error);
+        status.className = "error";
+        status.textContent =
+          "เกิดข้อผิดพลาด: " +
+          (error.code ? error.code + ": " : "") +
+          (error.message || String(error));
+      }
+    }
+
+    startLiff();
+  </script>
+</body>
+</html>
