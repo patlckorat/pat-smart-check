@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PAT Smart Check - LIFF Test</title>
+  <title>PAT Smart Check - ลงทะเบียน</title>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
@@ -20,39 +20,29 @@
       max-width: 520px;
       margin: 0 auto;
       padding: 24px;
-      background: white;
+      background: #ffffff;
       border-radius: 16px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, .10);
     }
 
     h2 {
-      margin: 0 0 20px;
+      margin: 0 0 8px;
       text-align: center;
     }
 
-    #status, .value {
-      padding: 12px;
-      border-radius: 8px;
-      word-break: break-all;
+    .subtitle {
+      margin: 0 0 20px;
+      color: #64748b;
+      text-align: center;
     }
 
     #status {
+      margin-bottom: 18px;
+      padding: 12px;
+      border-radius: 8px;
       background: #fff7ed;
       color: #9a3412;
       font-weight: bold;
-    }
-
-    .item {
-      margin-top: 18px;
-    }
-
-    .label {
-      margin-bottom: 6px;
-      font-weight: bold;
-    }
-
-    .value {
-      background: #f1f5f9;
     }
 
     .success {
@@ -64,32 +54,103 @@
       background: #fee2e2 !important;
       color: #b91c1c !important;
     }
+
+    .profile {
+      margin-bottom: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #f1f5f9;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: bold;
+    }
+
+    input {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 13px;
+      border: 0;
+      border-radius: 8px;
+      background: #06c755;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    button:disabled {
+      background: #94a3b8;
+    }
+
+    .note {
+      margin-top: 14px;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 
 <body>
   <div class="box">
     <h2>PAT Smart Check</h2>
+    <p class="subtitle">ลงทะเบียนเชื่อมบัญชี LINE</p>
 
     <div id="status">กำลังเชื่อมต่อ LINE...</div>
 
-    <div class="item">
-      <div class="label">ชื่อ LINE</div>
-      <div class="value" id="displayName">-</div>
+    <div class="profile">
+      บัญชี LINE: <strong id="displayName">-</strong>
     </div>
 
-    <div class="item">
-      <div class="label">LINE User ID</div>
-      <div class="value" id="userId">-</div>
+    <form id="registerForm">
+      <label for="nationalId">เลขบัตรประชาชน 13 หลัก</label>
+
+      <input
+        id="nationalId"
+        type="text"
+        inputmode="numeric"
+        maxlength="13"
+        autocomplete="off"
+        placeholder="กรอกเลขบัตรประชาชน"
+        required
+      >
+
+      <button id="submitButton" type="submit" disabled>
+        ลงทะเบียน
+      </button>
+    </form>
+
+    <div class="note">
+      ระบบตรวจสอบตัวตนจาก LINE ก่อนบันทึก และไม่เก็บเลขบัตรประชาชนแบบเต็มในชีต
     </div>
   </div>
 
   <script>
     const LIFF_ID = "2011040773-ptaokyCy";
 
-    async function startLiff() {
-      const status = document.getElementById("status");
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbwVVdW9mnkYyHKdjGJX2Mkl8s6TvMO8gWxRFqjNtFKjEyEcC4IbAOhUTDcTXWH08MiFHw/exec";
 
+    let idToken = "";
+
+    function setStatus(message, type) {
+      const status = document.getElementById("status");
+      status.textContent = message;
+      status.className = type || "";
+    }
+
+    async function startLiff() {
       try {
         await liff.init({ liffId: LIFF_ID });
 
@@ -99,25 +160,77 @@
         }
 
         const profile = await liff.getProfile();
+        idToken = liff.getIDToken();
+
+        if (!idToken) {
+          throw new Error("ไม่พบ ID Token กรุณาตรวจสอบ scope openid ใน LINE Developers");
+        }
 
         document.getElementById("displayName").textContent =
-          profile.displayName || "-";
+          profile.displayName || "ผู้ใช้ LINE";
 
-        document.getElementById("userId").textContent =
-          profile.userId || "-";
+        document.getElementById("submitButton").disabled = false;
 
-        status.className = "success";
-        status.textContent = "เชื่อมต่อ LINE สำเร็จ";
+        setStatus("เชื่อมต่อ LINE สำเร็จ", "success");
 
       } catch (error) {
         console.error(error);
-        status.className = "error";
-        status.textContent =
-          "เกิดข้อผิดพลาด: " +
-          (error.code ? error.code + ": " : "") +
-          (error.message || String(error));
+        setStatus(
+          "เกิดข้อผิดพลาด: " + (error.message || String(error)),
+          "error"
+        );
       }
     }
+
+    document.getElementById("nationalId").addEventListener("input", function () {
+      this.value = this.value.replace(/\D/g, "");
+    });
+
+    document.getElementById("registerForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const nationalId = document.getElementById("nationalId").value;
+      const button = document.getElementById("submitButton");
+
+      if (nationalId.length !== 13) {
+        setStatus("กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก", "error");
+        return;
+      }
+
+      try {
+        button.disabled = true;
+        setStatus("กำลังลงทะเบียน...");
+
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify({
+            idToken: idToken,
+            nationalId: nationalId
+          })
+        });
+
+        const result = await response.json();
+
+        if (!result.ok) {
+          throw new Error(result.message || "ลงทะเบียนไม่สำเร็จ");
+        }
+
+        setStatus(result.message, "success");
+        document.getElementById("nationalId").disabled = true;
+
+      } catch (error) {
+        console.error(error);
+        button.disabled = false;
+
+        setStatus(
+          "ลงทะเบียนไม่สำเร็จ: " + (error.message || String(error)),
+          "error"
+        );
+      }
+    });
 
     startLiff();
   </script>
