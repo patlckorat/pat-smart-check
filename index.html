@@ -68,7 +68,17 @@
       <div id="captureTitle" class="info"></div>
 
       <div id="reader"></div>
-
+<button
+2
+id="takePhotoBtn"
+3
+class="green hidden"
+4
+onclick="triggerCamera()">
+5
+📸 ถ่ายรูป Selfie
+6
+</button>
       <input
         id="photoInput"
         class="hidden"
@@ -127,7 +137,9 @@
 
       return response.json();
     }
-
+function triggerCamera() {
+  document.getElementById("photoInput").click();
+}
     async function startLiff() {
       try {
         await liff.init({ liffId: LIFF_ID });
@@ -257,21 +269,36 @@
     }
 
     async function onQrSuccess(decodedText) {
-      qrText = decodedText;
 
-      if (html5QrCode) {
-        await html5QrCode.stop();
-        html5QrCode.clear();
-        html5QrCode = null;
-      }
+  qrText = decodedText;
 
-      document.getElementById("reader").innerHTML = "";
-      document.getElementById("captureTitle").textContent =
-        "ขั้นที่ 2: ถ่ายรูป Selfie เพื่อยืนยันตัวตน";
+  if (html5QrCode) {
 
-      setStatus("สแกน QR สำเร็จ กรุณาถ่ายรูป Selfie", "success");
-      document.getElementById("photoInput").click();
-    }
+    try {
+      await html5QrCode.stop();
+      await html5QrCode.clear();
+    } catch (e) {}
+
+    html5QrCode = null;
+  }
+
+  document.getElementById("reader").innerHTML = "";
+
+  document.getElementById("captureTitle").textContent =
+    "ขั้นที่ 2: กดปุ่มด้านล่างเพื่อถ่ายรูป Selfie";
+
+  setStatus(
+    "สแกน QR สำเร็จ กรุณากดปุ่มถ่ายรูป",
+    "success"
+  );
+
+  document
+    .getElementById("takePhotoBtn")
+    .classList.remove("hidden");
+  document
+  .getElementById("takePhotoBtn")
+  .classList.add("hidden");
+}
 
     document.getElementById("photoInput").addEventListener("change", async function(event) {
       const file = event.target.files[0];
@@ -413,6 +440,9 @@
       document.getElementById("photoInput").value = "";
       document.getElementById("captureSection").classList.add("hidden");
       document.getElementById("attendanceSection").classList.remove("hidden");
+      document
+  .getElementById("takePhotoBtn")
+  .classList.add("hidden");
     }
 
     async function requestCorrection() {
