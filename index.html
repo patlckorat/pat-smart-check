@@ -69,15 +69,10 @@
 
       <div id="reader"></div>
 <button
-2
-id="takePhotoBtn"
-3
-class="green hidden"
-4
-onclick="triggerCamera()">
-5
-📸 ถ่ายรูป Selfie
-6
+  id="takePhotoBtn"
+  class="green hidden"
+  onclick="triggerCamera()">
+  📸 ถ่ายรูป Selfie
 </button>
       <input
         id="photoInput"
@@ -268,7 +263,7 @@ function triggerCamera() {
       }
     }
 
-    async function onQrSuccess(decodedText) {
+  async function onQrSuccess(decodedText) {
 
   qrText = decodedText;
 
@@ -295,9 +290,7 @@ function triggerCamera() {
   document
     .getElementById("takePhotoBtn")
     .classList.remove("hidden");
-  document
-  .getElementById("takePhotoBtn")
-  .classList.add("hidden");
+
 }
 
     document.getElementById("photoInput").addEventListener("change", async function(event) {
