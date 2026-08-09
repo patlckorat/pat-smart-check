@@ -160,7 +160,10 @@
         action: "getProfile",
         idToken: idToken
       });
-
+      
+      console.log(result);
+    alert(JSON.stringify(result.today));
+      
       if (!result.ok) {
         throw new Error(result.message);
       }
@@ -189,8 +192,11 @@
           "<br>อนุญาตในระยะ " + location.radiusMeters + " เมตร"
         : "ยังไม่ได้กำหนดสถานที่ฝึกงาน";
 
-      document.getElementById("checkInButton").disabled = !location || today.checkIn;
-      document.getElementById("checkOutButton").disabled = !location;
+     document.getElementById("checkInButton").disabled =
+  !location || today.checkIn;
+
+document.getElementById("checkOutButton").disabled =
+  !location || !today.checkIn || today.checkOut;
 
       if (today.checkOut) {
         setStatus("วันนี้เช็กอินและเช็กเอาต์เรียบร้อยแล้ว", "success");
