@@ -190,7 +190,7 @@
         : "ยังไม่ได้กำหนดสถานที่ฝึกงาน";
 
       document.getElementById("checkInButton").disabled = !location || today.checkIn;
-      document.getElementById("checkOutButton").disabled = !location || !today.checkIn || today.checkOut;
+      document.getElementById("checkOutButton").disabled = !location;
 
       if (today.checkOut) {
         setStatus("วันนี้เช็กอินและเช็กเอาต์เรียบร้อยแล้ว", "success");
