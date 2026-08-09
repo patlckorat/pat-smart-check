@@ -4,28 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PAT Smart Check</title>
+
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
   <style>
-    body { margin: 0; padding: 20px; background: #f5f7fa; font-family: Arial, sans-serif; color: #1f2937; }
-    .box { max-width: 520px; margin: 0 auto; padding: 24px; background: white; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,.1); }
-    h2, .subtitle { text-align: center; }
-    h2 { margin: 0 0 8px; }
-    .subtitle { margin: 0 0 20px; color: #64748b; }
-    #status, .info { margin: 14px 0; padding: 12px; border-radius: 8px; }
-    #status { background: #fff7ed; color: #9a3412; font-weight: bold; }
-    .success { background: #dcfce7 !important; color: #166534 !important; }
-    .error { background: #fee2e2 !important; color: #b91c1c !important; }
-    .info { background: #f1f5f9; line-height: 1.6; }
-    label { display: block; margin: 18px 0 7px; font-weight: bold; }
-    input { box-sizing: border-box; width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; }
-    button { width: 100%; margin-top: 14px; padding: 13px; border: 0; border-radius: 8px; color: white; font-size: 16px; font-weight: bold; }
-    .green { background: #06c755; }
-    .blue { background: #2563eb; }
-    .red { background: #dc2626; }
-    button:disabled { background: #94a3b8; }
-    .hidden { display: none; }
+    body { margin:0; padding:20px; background:#f5f7fa; font-family:Arial,sans-serif; color:#1f2937; }
+    .box { max-width:520px; margin:auto; padding:22px; background:#fff; border-radius:16px; box-shadow:0 4px 16px rgba(0,0,0,.1); }
+    h2, .subtitle { text-align:center; }
+    h2 { margin:0 0 6px; }
+    .subtitle { margin:0 0 18px; color:#64748b; }
+    #status, .info { margin:12px 0; padding:12px; border-radius:8px; }
+    #status { background:#fff7ed; color:#9a3412; font-weight:bold; }
+    .info { background:#f1f5f9; line-height:1.6; }
+    .success { background:#dcfce7 !important; color:#166534 !important; }
+    .error { background:#fee2e2 !important; color:#b91c1c !important; }
+    .hidden { display:none; }
+    label { display:block; margin-top:16px; font-weight:bold; }
+    input { box-sizing:border-box; width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; font-size:16px; }
+    button { width:100%; margin-top:12px; padding:13px; border:0; border-radius:8px; color:#fff; font-size:16px; font-weight:bold; }
+    .green { background:#06c755; }
+    .red { background:#dc2626; }
+    .blue { background:#2563eb; }
+    .gray { background:#64748b; }
+    button:disabled { background:#94a3b8; }
+    #reader { margin-top:16px; overflow:hidden; border-radius:10px; }
+    #photoPreview { width:100%; margin-top:12px; border-radius:10px; }
+    .preview { margin-top:16px; padding:14px; border:2px solid #06c755; border-radius:10px; }
   </style>
 </head>
+
 <body>
   <div class="box">
     <h2>PAT Smart Check</h2>
@@ -36,23 +44,73 @@
     <div id="registrationSection" class="hidden">
       <label for="studentId">รหัสนักเรียน</label>
       <input id="studentId" type="text" placeholder="กรอกรหัสนักเรียน">
-      <button id="registerButton" class="green">ลงทะเบียน</button>
+      <button class="green" onclick="registerStudent()">ลงทะเบียน</button>
     </div>
 
     <div id="attendanceSection" class="hidden">
       <div id="studentInfo" class="info"></div>
       <div id="storeInfo" class="info"></div>
 
-      <button id="checkInButton" class="green">เช็กอินเข้างาน</button>
-      <button id="checkOutButton" class="red">เช็กเอาต์ออกงาน</button>
+      <button id="checkInButton" class="green" onclick="startAttendance('checkIn')">
+        เช็กอินเข้างาน
+      </button>
+
+      <button id="checkOutButton" class="red" onclick="startAttendance('checkOut')">
+        เช็กเอาต์ออกงาน
+      </button>
+
+      <button class="gray" onclick="requestCorrection()">
+        ร้องขอแก้ไขเวลา
+      </button>
+    </div>
+
+    <div id="captureSection" class="hidden">
+      <div id="captureTitle" class="info"></div>
+
+      <div id="reader"></div>
+
+      <input
+        id="photoInput"
+        class="hidden"
+        type="file"
+        accept="image/*"
+        capture="user"
+      >
+
+      <img id="photoPreview" class="hidden" alt="ตัวอย่างรูป Selfie">
+
+      <div id="confirmSection" class="preview hidden">
+        <strong>ตรวจสอบก่อนบันทึก</strong>
+        <div id="previewInfo"></div>
+
+        <button class="blue" onclick="submitAttendance()">
+          ยืนยันบันทึก
+        </button>
+
+        <button class="gray" onclick="cancelAttendance()">
+          ยกเลิก
+        </button>
+      </div>
+
+      <button id="cancelScanButton" class="gray" onclick="cancelAttendance()">
+        ยกเลิก
+      </button>
     </div>
   </div>
 
   <script>
     const LIFF_ID = "2011040773-ptaokyCy";
-    const API_URL = "https://script.google.com/macros/s/AKfycbwVVdW9mnkYyHKdjGJX2Mkl8s6TvMO8gWxRFqjNtFKjEyEcC4IbAOhUTDcTXWH08MiFHw/exec";
+
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbwVVdW9mnkYyHKdjGJX2Mkl8s6TvMO8gWxRFqjNtFKjEyEcC4IbAOhUTDcTXWH08MiFHw/exec";
 
     let idToken = "";
+    let html5QrCode = null;
+    let currentAction = "";
+    let qrText = "";
+    let photoBase64 = "";
+    let photoMimeType = "image/jpeg";
+    let gpsData = null;
 
     function setStatus(message, type) {
       const status = document.getElementById("status");
@@ -82,7 +140,7 @@
         idToken = liff.getIDToken();
 
         if (!idToken) {
-          throw new Error("ไม่พบ ID Token");
+          throw new Error("ไม่พบ LINE ID Token");
         }
 
         await loadProfile();
@@ -104,14 +162,15 @@
 
       if (!result.registered) {
         document.getElementById("registrationSection").classList.remove("hidden");
+        document.getElementById("attendanceSection").classList.add("hidden");
         setStatus("กรุณาลงทะเบียนรหัสนักเรียนก่อน");
         return;
       }
 
-      showAttendance(result.student, result.location);
+      showAttendance(result.student, result.location, result.today);
     }
 
-    function showAttendance(student, location) {
+    function showAttendance(student, location, today) {
       document.getElementById("registrationSection").classList.add("hidden");
       document.getElementById("attendanceSection").classList.remove("hidden");
 
@@ -122,21 +181,29 @@
 
       document.getElementById("storeInfo").innerHTML = location
         ? "<strong>สถานที่ฝึกงาน</strong><br>" + location.storeName +
-          "<br>อนุญาตเช็กอินในระยะ " + location.radiusMeters + " เมตร"
+          "<br>อนุญาตในระยะ " + location.radiusMeters + " เมตร"
         : "ยังไม่ได้กำหนดสถานที่ฝึกงาน";
-      
-      setStatus("พร้อมเช็กอินด้วย GPS", "success");
+
+      document.getElementById("checkInButton").disabled = !location || today.checkIn;
+      document.getElementById("checkOutButton").disabled = !location || !today.checkIn || today.checkOut;
+
+      if (today.checkOut) {
+        setStatus("วันนี้เช็กอินและเช็กเอาต์เรียบร้อยแล้ว", "success");
+      } else if (today.checkIn) {
+        setStatus("เช็กอินแล้ว สามารถเช็กเอาต์ได้", "success");
+      } else {
+        setStatus("พร้อมเช็กอิน", "success");
+      }
     }
 
-    document.getElementById("registerButton").addEventListener("click", async function () {
-      const studentId = document.getElementById("studentId").value.trim();
-
-      if (!studentId) {
-        setStatus("กรุณากรอกรหัสนักเรียน", "error");
-        return;
-      }
-
+    async function registerStudent() {
       try {
+        const studentId = document.getElementById("studentId").value.trim();
+
+        if (!studentId) {
+          throw new Error("กรุณากรอกรหัสนักเรียน");
+        }
+
         setStatus("กำลังลงทะเบียน...");
 
         const result = await callApi({
@@ -152,34 +219,222 @@
         await loadProfile();
 
       } catch (error) {
-        setStatus("ลงทะเบียนไม่สำเร็จ: " + (error.message || error), "error");
+        setStatus(error.message || "ลงทะเบียนไม่สำเร็จ", "error");
+      }
+    }
+
+    async function startAttendance(action) {
+      currentAction = action;
+      qrText = "";
+      photoBase64 = "";
+      gpsData = null;
+
+      document.getElementById("attendanceSection").classList.add("hidden");
+      document.getElementById("captureSection").classList.remove("hidden");
+      document.getElementById("confirmSection").classList.add("hidden");
+      document.getElementById("photoPreview").classList.add("hidden");
+      document.getElementById("cancelScanButton").classList.remove("hidden");
+
+      document.getElementById("captureTitle").textContent =
+        action === "checkIn"
+          ? "ขั้นที่ 1: สแกน QR Code ของร้าน"
+          : "ขั้นที่ 1: สแกน QR Code ของร้านเพื่อเช็กเอาต์";
+
+      setStatus("กรุณาสแกน QR Code ที่ร้าน");
+
+      try {
+        html5QrCode = new Html5Qrcode("reader");
+
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 240, height: 240 } },
+          onQrSuccess
+        );
+
+      } catch (error) {
+        setStatus("เปิดกล้องสแกน QR ไม่สำเร็จ", "error");
+      }
+    }
+
+    async function onQrSuccess(decodedText) {
+      qrText = decodedText;
+
+      if (html5QrCode) {
+        await html5QrCode.stop();
+        html5QrCode.clear();
+        html5QrCode = null;
+      }
+
+      document.getElementById("reader").innerHTML = "";
+      document.getElementById("captureTitle").textContent =
+        "ขั้นที่ 2: ถ่ายรูป Selfie เพื่อยืนยันตัวตน";
+
+      setStatus("สแกน QR สำเร็จ กรุณาถ่ายรูป Selfie", "success");
+      document.getElementById("photoInput").click();
+    }
+
+    document.getElementById("photoInput").addEventListener("change", async function(event) {
+      const file = event.target.files[0];
+
+      if (!file) return;
+
+      try {
+        setStatus("กำลังเตรียมรูปและตรวจสอบ GPS...");
+
+        photoBase64 = await compressPhoto(file);
+        gpsData = await getGpsLocation();
+
+        const preview = document.getElementById("photoPreview");
+        preview.src = "data:image/jpeg;base64," + photoBase64;
+        preview.classList.remove("hidden");
+
+        document.getElementById("captureTitle").textContent =
+          "ขั้นที่ 3: ตรวจสอบข้อมูลก่อนกดยืนยัน";
+
+        document.getElementById("previewInfo").innerHTML =
+          "<br>ประเภท: <strong>" +
+          (currentAction === "checkIn" ? "เช็กอิน" : "เช็กเอาต์") +
+          "</strong><br>เวลา: <strong>" +
+          new Date().toLocaleString("th-TH") +
+          "</strong><br>GPS Accuracy: <strong>" +
+          Math.round(gpsData.accuracy) +
+          " เมตร</strong>";
+
+        document.getElementById("confirmSection").classList.remove("hidden");
+        document.getElementById("cancelScanButton").classList.add("hidden");
+
+        setStatus("ตรวจสอบข้อมูลและกดยืนยันบันทึก", "success");
+
+      } catch (error) {
+        setStatus(error.message || "เตรียมข้อมูลไม่สำเร็จ", "error");
       }
     });
 
-    async function recordAttendance(action) {
-      try {
-        setStatus("กำลังอ่านตำแหน่ง GPS...");
+    function getGpsLocation() {
+      return new Promise(function(resolve, reject) {
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy
+            });
+          },
+          function() {
+            reject(new Error("ไม่สามารถอ่านตำแหน่ง GPS ได้ กรุณาอนุญาตตำแหน่ง"));
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 20000,
+            maximumAge: 0
+          }
+        );
+      });
+    }
 
-        const position = await new Promise(function (resolve, reject) {
-          navigator.geolocation.getCurrentPosition(
-            resolve,
-            reject,
-            {
-              enableHighAccuracy: true,
-              timeout: 20000,
-              maximumAge: 0
+    function compressPhoto(file) {
+      return new Promise(function(resolve, reject) {
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+          const image = new Image();
+
+          image.onload = function() {
+            const maxSize = 1280;
+            let width = image.width;
+            let height = image.height;
+
+            if (width > maxSize || height > maxSize) {
+              const ratio = Math.min(maxSize / width, maxSize / height);
+              width = Math.round(width * ratio);
+              height = Math.round(height * ratio);
             }
-          );
-        });
 
-        setStatus("กำลังตรวจสอบระยะจากร้าน...");
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+
+            canvas.getContext("2d").drawImage(image, 0, 0, width, height);
+
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
+            resolve(dataUrl.split(",")[1]);
+          };
+
+          image.onerror = function() {
+            reject(new Error("อ่านรูปภาพไม่สำเร็จ"));
+          };
+
+          image.src = event.target.result;
+        };
+
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function submitAttendance() {
+      try {
+        setStatus("กำลังบันทึกข้อมูล...");
 
         const result = await callApi({
-          action: action,
+          action: currentAction,
           idToken: idToken,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
+          qrText: qrText,
+          photoBase64: photoBase64,
+          photoMimeType: photoMimeType,
+          latitude: gpsData.latitude,
+          longitude: gpsData.longitude,
+          accuracy: gpsData.accuracy
+        });
+
+        if (!result.ok) {
+          throw new Error(result.message);
+        }
+
+        cancelAttendance();
+        setStatus(result.message, "success");
+        await loadProfile();
+
+      } catch (error) {
+        setStatus(error.message || "บันทึกไม่สำเร็จ", "error");
+      }
+    }
+
+    async function cancelAttendance() {
+      if (html5QrCode) {
+        try {
+          await html5QrCode.stop();
+          html5QrCode.clear();
+        } catch (error) {}
+      }
+
+      html5QrCode = null;
+
+      document.getElementById("reader").innerHTML = "";
+      document.getElementById("photoInput").value = "";
+      document.getElementById("captureSection").classList.add("hidden");
+      document.getElementById("attendanceSection").classList.remove("hidden");
+    }
+
+    async function requestCorrection() {
+      const requestType = prompt("พิมพ์ CHECK_IN สำหรับแก้เวลาเข้า หรือ CHECK_OUT สำหรับแก้เวลาออก");
+
+      if (!requestType) return;
+
+      const requestedTime = prompt("ระบุเวลาที่ต้องการแก้ เช่น 08:00");
+      const reason = prompt("ระบุเหตุผลในการร้องขอแก้ไขเวลา");
+
+      if (!reason) {
+        setStatus("กรุณาระบุเหตุผล", "error");
+        return;
+      }
+
+      try {
+        const result = await callApi({
+          action: "requestCorrection",
+          idToken: idToken,
+          requestType: requestType.trim().toUpperCase(),
+          requestedTime: requestedTime || "",
+          reason: reason
         });
 
         if (!result.ok) {
@@ -189,18 +444,9 @@
         setStatus(result.message, "success");
 
       } catch (error) {
-        const message = error.message || "ไม่สามารถอ่านตำแหน่ง GPS ได้";
-        setStatus(message, "error");
+        setStatus(error.message || "ส่งคำร้องไม่สำเร็จ", "error");
       }
     }
-
-    document.getElementById("checkInButton").addEventListener("click", function () {
-      recordAttendance("checkIn");
-    });
-
-    document.getElementById("checkOutButton").addEventListener("click", function () {
-      recordAttendance("checkOut");
-    });
 
     startLiff();
   </script>
