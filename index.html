@@ -70,12 +70,12 @@
       <div id="reader"></div>
 
       <input
-        id="photoInput"
-        class="hidden"
-        type="file"
-        accept="image/*"
-        capture="user"
-      >
+  id="photoInput"
+  type="file"
+  accept="image/*"
+  capture="user"
+  style="display:none;"
+>
 
       <img id="photoPreview" class="hidden" alt="ตัวอย่างรูป Selfie">
 
@@ -256,7 +256,7 @@
       }
     }
 
-    async function onQrSuccess(decodedText) {
+   async function onQrSuccess(decodedText) {
 
   qrText = decodedText;
 
@@ -275,20 +275,17 @@
     "ขั้นที่ 2: ถ่ายรูป Selfie เพื่อยืนยันตัวตน";
 
   setStatus(
-    "สแกน QR สำเร็จ กรุณาแตะหน้าจอเพื่อเปิดกล้อง",
+    "สแกน QR สำเร็จ กำลังเปิดกล้อง...",
     "success"
   );
 
+  const input = document.getElementById("photoInput");
+
+  input.style.display = "block";
+
   setTimeout(() => {
-    const input = document.getElementById("photoInput");
-
-    input.classList.remove("hidden");
-
-    input.style.display = "block";
-
-    input.style.marginTop = "15px";
-  }, 500);
-
+    input.click();
+  }, 800);
 }
 
     document.getElementById("photoInput").addEventListener("change", async function(event) {
