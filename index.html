@@ -3,133 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PAT Smart Check - ลงทะเบียน</title>
-
+  <title>PAT Smart Check</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
   <style>
-    body {
-      margin: 0;
-      padding: 20px;
-      background: #f5f7fa;
-      font-family: Arial, sans-serif;
-      color: #1f2937;
-    }
-
-    .box {
-      max-width: 520px;
-      margin: 0 auto;
-      padding: 24px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, .10);
-    }
-
-    h2, .subtitle {
-      text-align: center;
-    }
-
-    h2 {
-      margin: 0 0 8px;
-    }
-
-    .subtitle {
-      margin: 0 0 20px;
-      color: #64748b;
-    }
-
-    #status, .profile {
-      margin-bottom: 18px;
-      padding: 12px;
-      border-radius: 8px;
-    }
-
-    #status {
-      background: #fff7ed;
-      color: #9a3412;
-      font-weight: bold;
-    }
-
-    .profile {
-      background: #f1f5f9;
-    }
-
-    .success {
-      background: #dcfce7 !important;
-      color: #166534 !important;
-    }
-
-    .error {
-      background: #fee2e2 !important;
-      color: #b91c1c !important;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 7px;
-      font-weight: bold;
-    }
-
-    input {
-      box-sizing: border-box;
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-
-    button {
-      width: 100%;
-      margin-top: 18px;
-      padding: 13px;
-      border: 0;
-      border-radius: 8px;
-      background: #06c755;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    button:disabled {
-      background: #94a3b8;
-    }
+    body { margin: 0; padding: 20px; background: #f5f7fa; font-family: Arial, sans-serif; color: #1f2937; }
+    .box { max-width: 520px; margin: 0 auto; padding: 24px; background: white; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+    h2, .subtitle { text-align: center; }
+    h2 { margin: 0 0 8px; }
+    .subtitle { margin: 0 0 20px; color: #64748b; }
+    #status, .info { margin: 14px 0; padding: 12px; border-radius: 8px; }
+    #status { background: #fff7ed; color: #9a3412; font-weight: bold; }
+    .success { background: #dcfce7 !important; color: #166534 !important; }
+    .error { background: #fee2e2 !important; color: #b91c1c !important; }
+    .info { background: #f1f5f9; line-height: 1.6; }
+    label { display: block; margin: 18px 0 7px; font-weight: bold; }
+    input { box-sizing: border-box; width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; }
+    button { width: 100%; margin-top: 14px; padding: 13px; border: 0; border-radius: 8px; color: white; font-size: 16px; font-weight: bold; }
+    .green { background: #06c755; }
+    .blue { background: #2563eb; }
+    .red { background: #dc2626; }
+    button:disabled { background: #94a3b8; }
+    .hidden { display: none; }
   </style>
 </head>
-
 <body>
   <div class="box">
     <h2>PAT Smart Check</h2>
-    <p class="subtitle">ลงทะเบียนเชื่อมบัญชี LINE</p>
+    <p class="subtitle">ระบบเช็กอินฝึกงาน</p>
 
     <div id="status">กำลังเชื่อมต่อ LINE...</div>
 
-    <div class="profile">
-      บัญชี LINE: <strong id="displayName">-</strong>
+    <div id="registrationSection" class="hidden">
+      <label for="studentId">รหัสนักเรียน</label>
+      <input id="studentId" type="text" placeholder="กรอกรหัสนักเรียน">
+      <button id="registerButton" class="green">ลงทะเบียน</button>
     </div>
 
-    <form id="registerForm">
-      <label for="studentId">รหัสนักเรียน</label>
+    <div id="attendanceSection" class="hidden">
+      <div id="studentInfo" class="info"></div>
+      <div id="storeInfo" class="info"></div>
 
-      <input
-        id="studentId"
-        type="text"
-        autocomplete="off"
-        placeholder="กรอกรหัสนักเรียน"
-        required
-      >
-
-      <button id="submitButton" type="submit" disabled>
-        ลงทะเบียน
-      </button>
-    </form>
+      <button id="checkInButton" class="green">เช็กอินเข้างาน</button>
+      <button id="checkOutButton" class="red">เช็กเอาต์ออกงาน</button>
+    </div>
   </div>
 
   <script>
     const LIFF_ID = "2011040773-ptaokyCy";
-
-    const API_URL =
-      "https://script.google.com/macros/s/AKfycbwVVdW9mnkYyHKdjGJX2Mkl8s6TvMO8gWxRFqjNtFKjEyEcC4IbAOhUTDcTXWH08MiFHw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwVVdW9mnkYyHKdjGJX2Mkl8s6TvMO8gWxRFqjNtFKjEyEcC4IbAOhUTDcTXWH08MiFHw/exec";
 
     let idToken = "";
 
@@ -137,6 +58,16 @@
       const status = document.getElementById("status");
       status.textContent = message;
       status.className = type || "";
+    }
+
+    async function callApi(data) {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(data)
+      });
+
+      return response.json();
     }
 
     async function startLiff() {
@@ -148,32 +79,57 @@
           return;
         }
 
-        const profile = await liff.getProfile();
         idToken = liff.getIDToken();
 
         if (!idToken) {
           throw new Error("ไม่พบ ID Token");
         }
 
-        document.getElementById("displayName").textContent =
-          profile.displayName || "ผู้ใช้ LINE";
-
-        document.getElementById("submitButton").disabled = false;
-        setStatus("เชื่อมต่อ LINE สำเร็จ", "success");
+        await loadProfile();
 
       } catch (error) {
-        setStatus(
-          "เกิดข้อผิดพลาด: " + (error.message || String(error)),
-          "error"
-        );
+        setStatus("เกิดข้อผิดพลาด: " + (error.message || error), "error");
       }
     }
 
-    document.getElementById("registerForm").addEventListener("submit", async function (event) {
-      event.preventDefault();
+    async function loadProfile() {
+      const result = await callApi({
+        action: "getProfile",
+        idToken: idToken
+      });
 
+      if (!result.ok) {
+        throw new Error(result.message);
+      }
+
+      if (!result.registered) {
+        document.getElementById("registrationSection").classList.remove("hidden");
+        setStatus("กรุณาลงทะเบียนรหัสนักเรียนก่อน");
+        return;
+      }
+
+      showAttendance(result.student, result.location);
+    }
+
+    function showAttendance(student, location) {
+      document.getElementById("registrationSection").classList.add("hidden");
+      document.getElementById("attendanceSection").classList.remove("hidden");
+
+      document.getElementById("studentInfo").innerHTML =
+        "<strong>" + student.prefix + student.firstName + " " + student.lastName + "</strong><br>" +
+        "รหัสนักเรียน: " + student.studentId + "<br>" +
+        student.level + " ชั้น " + student.grade + " ห้อง " + student.room;
+
+      document.getElementById("storeInfo").innerHTML = location
+        ? "<strong>สถานที่ฝึกงาน</strong><br>" + location.storeName +
+          "<br>อนุญาตเช็กอินในระยะ " + location.radiusMeters + " เมตร"
+        : "ยังไม่ได้กำหนดสถานที่ฝึกงาน";
+      
+      setStatus("พร้อมเช็กอินด้วย GPS", "success");
+    }
+
+    document.getElementById("registerButton").addEventListener("click", async function () {
       const studentId = document.getElementById("studentId").value.trim();
-      const button = document.getElementById("submitButton");
 
       if (!studentId) {
         setStatus("กรุณากรอกรหัสนักเรียน", "error");
@@ -181,36 +137,69 @@
       }
 
       try {
-        button.disabled = true;
         setStatus("กำลังลงทะเบียน...");
 
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
-          body: JSON.stringify({
-            idToken: idToken,
-            studentId: studentId
-          })
+        const result = await callApi({
+          action: "register",
+          idToken: idToken,
+          studentId: studentId
         });
 
-        const result = await response.json();
+        if (!result.ok) {
+          throw new Error(result.message);
+        }
+
+        await loadProfile();
+
+      } catch (error) {
+        setStatus("ลงทะเบียนไม่สำเร็จ: " + (error.message || error), "error");
+      }
+    });
+
+    async function recordAttendance(action) {
+      try {
+        setStatus("กำลังอ่านตำแหน่ง GPS...");
+
+        const position = await new Promise(function (resolve, reject) {
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            reject,
+            {
+              enableHighAccuracy: true,
+              timeout: 20000,
+              maximumAge: 0
+            }
+          );
+        });
+
+        setStatus("กำลังตรวจสอบระยะจากร้าน...");
+
+        const result = await callApi({
+          action: action,
+          idToken: idToken,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        });
 
         if (!result.ok) {
-          throw new Error(result.message || "ลงทะเบียนไม่สำเร็จ");
+          throw new Error(result.message);
         }
 
         setStatus(result.message, "success");
-        document.getElementById("studentId").disabled = true;
 
       } catch (error) {
-        button.disabled = false;
-        setStatus(
-          "ลงทะเบียนไม่สำเร็จ: " + (error.message || String(error)),
-          "error"
-        );
+        const message = error.message || "ไม่สามารถอ่านตำแหน่ง GPS ได้";
+        setStatus(message, "error");
       }
+    }
+
+    document.getElementById("checkInButton").addEventListener("click", function () {
+      recordAttendance("checkIn");
+    });
+
+    document.getElementById("checkOutButton").addEventListener("click", function () {
+      recordAttendance("checkOut");
     });
 
     startLiff();
