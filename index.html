@@ -174,34 +174,37 @@ function triggerCamera() {
         return;
       }
 
-      showAttendance(result.student, result.location, result.today);
-    }
+   function showAttendance(student, location, today) {
+  document.getElementById("registrationSection").classList.add("hidden");
+  document.getElementById("attendanceSection").classList.remove("hidden");
 
-    function showAttendance(student, location, today) {
-      document.getElementById("registrationSection").classList.add("hidden");
-      document.getElementById("attendanceSection").classList.remove("hidden");
+  document.getElementById("studentInfo").innerHTML =
+    "<strong>" + student.prefix + student.firstName + " " + student.lastName + "</strong><br>" +
+    "รหัสนักเรียน: " + student.studentId + "<br>" +
+    student.level + " ชั้น " + student.grade + " ห้อง " + student.room;
 
-      document.getElementById("studentInfo").innerHTML =
-        "<strong>" + student.prefix + student.firstName + " " + student.lastName + "</strong><br>" +
-        "รหัสนักเรียน: " + student.studentId + "<br>" +
-        student.level + " ชั้น " + student.grade + " ห้อง " + student.room;
+  document.getElementById("storeInfo").innerHTML = location
+    ? "<strong>สถานที่ฝึกงาน</strong><br>" + location.storeName +
+      "<br>อนุญาตในระยะ " + location.radiusMeters + " เมตร"
+    : "ยังไม่ได้กำหนดสถานที่ฝึกงาน";
 
-      document.getElementById("storeInfo").innerHTML = location
-        ? "<strong>สถานที่ฝึกงาน</strong><br>" + location.storeName +
-          "<br>อนุญาตในระยะ " + location.radiusMeters + " เมตร"
-        : "ยังไม่ได้กำหนดสถานที่ฝึกงาน";
+  // ตรวจสอบสถานะการเช็กอิน/เช็กเอาต์อย่างชัดเจน (แปลงเป็น Boolean)
+  const hasCheckedIn = Boolean(today && today.checkIn);
+  const hasCheckedOut = Boolean(today && today.checkOut);
 
-      document.getElementById("checkInButton").disabled = !location || today.checkIn;
-      document.getElementById("checkOutButton").disabled = !location || !today.checkIn || today.checkOut;
+  // ควบคุมการ เปิด/ปิด ปุ่ม
+  document.getElementById("checkInButton").disabled = !location || hasCheckedIn;
+  document.getElementById("checkOutButton").disabled = !location || !hasCheckedIn || hasCheckedOut;
 
-      if (today.checkOut) {
-        setStatus("วันนี้เช็กอินและเช็กเอาต์เรียบร้อยแล้ว", "success");
-      } else if (today.checkIn) {
-        setStatus("เช็กอินแล้ว สามารถเช็กเอาต์ได้", "success");
-      } else {
-        setStatus("พร้อมเช็กอิน", "success");
-      }
-    }
+  // แสดงข้อความ Status ตามสถานะจริง
+  if (hasCheckedOut) {
+    setStatus("วันนี้เช็กอินและเช็กเอาต์เรียบร้อยแล้ว", "success");
+  } else if (hasCheckedIn) {
+    setStatus("เช็กอินแล้ว สามารถเช็กเอาต์ได้", "success");
+  } else {
+    setStatus("พร้อมเช็กอิน", "success");
+  }
+}
 
     async function registerStudent() {
       try {
